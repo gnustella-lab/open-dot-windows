@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OpenDot.App.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:OpenDot.Core.Models"
+    mc:Ignorable="d">
+
+    <ScrollViewer Padding="36,24">
+        <StackPanel Spacing="28" MaxWidth="720" HorizontalAlignment="Left">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Settings &amp; Security" FontSize="26" FontWeight="Bold" />
+                <TextBlock Text="Manage API keys, models, computer sandboxes and the Windows DPAPI credential vault."
+                           FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <TextBlock x:Name="StatusMessageText" FontSize="13" Foreground="{ThemeResource AccentAAFillColorDefaultBrush}" />
+
+            <!-- API Keys Section -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="AI Provider Keys" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="Keys are sealed with Windows DPAPI and tied to your Windows user account."
+                               FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <PasswordBox x:Name="OpenAiKeyInput" Header="OpenAI API Key" PlaceholderText="sk-..." />
+                    <PasswordBox x:Name="OpenRouterKeyInput" Header="OpenRouter API Key (Open Weights)" PlaceholderText="sk-or-..." />
+                    <PasswordBox x:Name="ComposioKeyInput" Header="Composio Project API Key (Triggers)" PlaceholderText="comp_..." />
+
+                    <Button Content="Save Keys" Style="{StaticResource AccentButtonStyle}" Click="OnSaveSettingsClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Models & Sandbox Section -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Model &amp; Execution Environment" FontSize="18" FontWeight="SemiBold" />
+
+                    <TextBox x:Name="DefaultModelInput" Header="Default AI Model" PlaceholderText="gpt-4o" />
+                    <TextBox x:Name="ComputerModeInput" Header="Computer Mode (local / docker / cloud)" PlaceholderText="local" />
+
+                    <Button Content="Save Model Preferences" Click="OnSaveModelPrefsClicked" />
+                </StackPanel>
+            </Border>
+
+            <!-- Passwords Vault Section -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Passwords Vault (DPAPI)" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="Dots can sign into websites on your behalf without ever reading your plaintext passwords."
+                                   FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- Add Password Form -->
+                    <Grid ColumnSpacing="8" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="SiteInput" PlaceholderText="Site (e.g. github.com)" />
+                        <TextBox Grid.Column="1" x:Name="UsernameInput" PlaceholderText="Username/Email" />
+                        <PasswordBox Grid.Column="2" x:Name="PasswordInput" PlaceholderText="Password" />
+                        <Button Grid.Column="3" Content="+ Add" Style="{StaticResource AccentButtonStyle}" Click="OnAddPasswordClicked" />
+                    </Grid>
+
+                    <!-- Stored Passwords List -->
+                    <ListView x:Name="PasswordsListView" SelectionMode="None">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:PasswordEntry">
+                                <Grid Padding="8,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind Site}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind Username}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="2" Content="Delete" Click="OnDeletePasswordClicked" Tag="{x:Bind Id}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

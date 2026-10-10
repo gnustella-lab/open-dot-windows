@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="OpenDot.App.Views.VoiceDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Voice Call"
+    CloseButtonText="End Call">
+
+    <StackPanel Spacing="20" HorizontalAlignment="Center" Padding="20" Width="360">
+        <!-- Call Animation -->
+        <Grid Width="100" Height="100" HorizontalAlignment="Center">
+            <Ellipse Fill="#2051a2ff" Width="100" Height="100" />
+            <Ellipse Fill="#4051a2ff" Width="76" Height="76" />
+            <Border Width="56" Height="56" CornerRadius="28" Background="{ThemeResource AccentAAFillColorDefaultBrush}">
+                <FontIcon Glyph="&#xE717;" FontSize="24" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+        </Grid>
+
+        <StackPanel Spacing="6" HorizontalAlignment="Center">
+            <TextBlock x:Name="DotNameText" Text="Talking with Dot" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" />
+            <TextBlock x:Name="CallStatusText" Text="Connecting to OpenAI Realtime..." FontSize="13"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <TextBlock Text="Anything you ask on the call is transcribed and saved to the chat. Tasks handed off will keep running after you hang up."
+                   FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextWrapping="Wrap" TextAlignment="Center" />
+    </StackPanel>
+</ContentDialog>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="OpenDot.App.Controls.DotAvatarControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Width="{x:Bind AvatarSize, Mode=OneWay}" Height="{x:Bind AvatarSize, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <!-- Feet -->
+        <Canvas Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+            <Canvas.RenderTransform>
+                <ScaleTransform ScaleX="{x:Bind ScaleFactor, Mode=OneWay}" ScaleY="{x:Bind ScaleFactor, Mode=OneWay}" />
+            </Canvas.RenderTransform>
+
+            <!-- Left Foot -->
+            <Ellipse Canvas.Left="14" Canvas.Top="46" Width="14" Height="10" Fill="{x:Bind AccentBrush, Mode=OneWay}" />
+            <!-- Right Foot -->
+            <Ellipse Canvas.Left="36" Canvas.Top="46" Width="14" Height="10" Fill="{x:Bind AccentBrush, Mode=OneWay}" />
+
+            <!-- Body Shadow -->
+            <Ellipse Canvas.Left="12" Canvas.Top="46" Width="40" Height="8" Fill="#20000000" />
+
+            <!-- Main Body Puffball -->
+            <Ellipse Canvas.Left="8" Canvas.Top="8" Width="48" Height="44" Fill="{x:Bind BodyBrush, Mode=OneWay}" />
+
+            <!-- Body Highlight -->
+            <Ellipse Canvas.Left="12" Canvas.Top="10" Width="20" Height="12" Fill="#30FFFFFF" />
+
+            <!-- Left Blush -->
+            <Ellipse Canvas.Left="14" Canvas.Top="28" Width="8" Height="5" Fill="#40FF4081" />
+            <!-- Right Blush -->
+            <Ellipse Canvas.Left="42" Canvas.Top="28" Width="8" Height="5" Fill="#40FF4081" />
+
+            <!-- Left Eye -->
+            <Ellipse Canvas.Left="20" Canvas.Top="22" Width="6" Height="8" Fill="{x:Bind EyeBrush, Mode=OneWay}" />
+            <Ellipse Canvas.Left="21" Canvas.Top="23" Width="2.5" Height="3" Fill="White" />
+
+            <!-- Right Eye -->
+            <Ellipse Canvas.Left="38" Canvas.Top="22" Width="6" Height="8" Fill="{x:Bind EyeBrush, Mode=OneWay}" />
+            <Ellipse Canvas.Left="39" Canvas.Top="23" Width="2.5" Height="3" Fill="White" />
+
+            <!-- Accessory: Sprout / Antenna / Halo -->
+            <Path Canvas.Left="28" Canvas.Top="2" Width="8" Height="8" Data="M4,8 C4,4 8,2 8,0 C4,1 0,4 4,8 Z" Fill="#4CAF50" Visibility="{x:Bind AccessoryVisibility, Mode=OneWay}" />
+        </Canvas>
+
+        <!-- Working glow pulse border -->
+        <Ellipse Width="{x:Bind AvatarSize, Mode=OneWay}" Height="{x:Bind AvatarSize, Mode=OneWay}"
+                 Stroke="#4051a2ff" StrokeThickness="3"
+                 Visibility="{x:Bind WorkingPulseVisibility, Mode=OneWay}" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OpenDot.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OpenDot.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

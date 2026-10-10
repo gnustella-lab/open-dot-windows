@@ -1,0 +1,46 @@
+name: Build Open Dot for Windows
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build & Test Native Windows Desktop App
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore OpenDot.Windows/OpenDot.Windows.sln
+
+    - name: Build Solution
+      run: dotnet build OpenDot.Windows/OpenDot.Windows.sln -c Release -p:WindowsPackageType=None --no-restore
+
+    - name: Run Unit Tests
+      run: dotnet test OpenDot.Windows/tests/OpenDot.Tests/OpenDot.Tests.csproj -c Release --no-build --verbosity normal
+
+    - name: Publish Self-Contained WinUI 3 Desktop App
+      run: >
+        dotnet publish OpenDot.Windows/src/OpenDot.App/OpenDot.App.csproj
+        -c Release
+        -r win-x64
+        --self-contained true
+        -p:WindowsPackageType=None
+        -p:Platform=x64
+        -o OpenDot.Windows/dist/OpenDot-win-x64
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenDot-Windows-x64
+        path: OpenDot.Windows/dist/OpenDot-win-x64/

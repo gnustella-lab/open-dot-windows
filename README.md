@@ -1,5 +1,7 @@
 # Open Dot
 
+> 🪟 **Looking for Windows?** Check out the 100% native [**Open Dot for Windows**](OpenDot.Windows/) desktop port built with C#, .NET 8 LTS, WinUI 3 and Windows App SDK — zero Electron, zero web wrappers, zero Node.js required in production!
+
 OpenAI launched Dots on September 29, personal agents that keep working in the background on their own computers, but you need ChatGPT Pro or Business Premium to use them. Open Dot is an open source version that runs on your own Mac with your own OpenAI key, or with open models like Kimi, DeepSeek and Qwen through OpenRouter.
 
 ## What your dots can do

@@ -1,0 +1,26 @@
+## .NET & Visual Studio
+[Bb]in/
+[Oo]bj/
+[Dd]ist/
+[Ll]og/
+[Ll]ogs/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Windows App SDK & WinUI 3
+Generated Files/
+intermediatexaml/
+*.xbf
+*.pri
+
+## Playwright
+.playwright/
+
+## Local data
+dots.db
+dots.db-shm
+dots.db-wal
+vault.json

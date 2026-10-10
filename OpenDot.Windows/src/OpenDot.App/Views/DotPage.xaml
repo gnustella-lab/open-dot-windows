@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OpenDot.App.Views.DotPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:OpenDot.App.Controls"
+    xmlns:models="using:OpenDot.Core.Models"
+    xmlns:views="using:OpenDot.App.Views"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <FontIconSource x:Key="ChatIconSource" Glyph="&#xE8BD;" />
+        <FontIconSource x:Key="ComputerIconSource" Glyph="&#xE7F4;" />
+        <FontIconSource x:Key="FolderIconSource" Glyph="&#xE8B7;" />
+        <FontIconSource x:Key="SettingsIconSource" Glyph="&#xE713;" />
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Dot Header Bar -->
+        <Border Grid.Row="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="24,14"
+                Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Avatar -->
+                <controls:DotAvatarControl x:Name="HeaderAvatar" AvatarSize="48" Margin="0,0,16,0" />
+
+                <!-- Name & Status -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock x:Name="DotNameText" Text="Dot" FontSize="20" FontWeight="Bold" />
+                        <Border x:Name="StatusBadge" CornerRadius="4" Padding="6,2" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <TextBlock x:Name="StatusBadgeText" Text="idle" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="DotPurposeText" Text="Purpose" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <!-- Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button x:Name="VoiceCallButton" Content="📞 Call" Click="OnVoiceCallClicked" />
+                    <Button x:Name="PauseButton" Content="Pause" Click="OnPauseClicked" />
+                    <Button x:Name="StopButton" Content="Stop" Click="OnStopClicked" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Tabs -->
+        <TabView Grid.Row="1" x:Name="DotTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent">
+            <!-- TAB 1: CHAT -->
+            <TabViewItem Header="Chat" IconSource="{StaticResource ChatIconSource}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Messages List -->
+                    <ListView x:Name="MessagesListView" Padding="24,16" SelectionMode="None">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Message">
+                                <StackPanel Margin="0,4,0,8">
+                                    <!-- USER MESSAGE -->
+                                    <Border HorizontalAlignment="Right" Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                            CornerRadius="14" Padding="14,10" MaxWidth="520"
+                                            Visibility="{x:Bind views:DotPage.IsUserVisibility(Role)}">
+                                        <TextBlock Text="{x:Bind Text}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                    TextWrapping="Wrap" FontSize="14" />
+                                    </Border>
+
+                                    <!-- DOT MESSAGE -->
+                                    <Border HorizontalAlignment="Left" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                                            CornerRadius="14" Padding="14,10" MaxWidth="620"
+                                            Visibility="{x:Bind views:DotPage.IsDotVisibility(Role)}">
+                                        <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" FontSize="14" />
+                                    </Border>
+
+                                    <!-- ACTIVITY MESSAGE -->
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" Margin="0,4"
+                                                Visibility="{x:Bind views:DotPage.IsActivityVisibility(Role)}">
+                                        <ProgressRing IsActive="True" Width="12" Height="12" />
+                                        <TextBlock Text="{x:Bind Text}" FontSize="12" FontStyle="Italic"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <!-- APPROVAL CARD -->
+                                    <controls:ApprovalCardControl Card="{x:Bind Card}" MessageId="{x:Bind Id}"
+                                                                  OnChoice="OnApprovalChoice"
+                                                                  Visibility="{x:Bind views:DotPage.IsApprovalCardVisibility(Card)}" />
+
+                                    <!-- QUESTION CARD -->
+                                    <controls:QuestionCardControl Card="{x:Bind Card}" MessageId="{x:Bind Id}"
+                                                                  OnAnswer="OnQuestionAnswer"
+                                                                  Visibility="{x:Bind views:DotPage.IsQuestionCardVisibility(Card)}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Message Input Box -->
+                    <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
+                            Padding="24,14" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="ChatInputBox" PlaceholderText="Message your Dot..." KeyDown="OnChatInputKeyDown" />
+                            <Button Grid.Column="1" Content="Send" Style="{StaticResource AccentButtonStyle}" Click="OnSendClicked" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabViewItem>
+
+            <!-- TAB 2: COMPUTER -->
+            <TabViewItem Header="Computer" IconSource="{StaticResource ComputerIconSource}">
+                <Grid Padding="24,16" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Address Bar & Navigation -->
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="BrowserUrlInput" Text="https://www.bing.com" PlaceholderText="https://..." KeyDown="OnBrowserUrlKeyDown" />
+                        <Button Grid.Column="1" Content="Go" Click="OnGoUrlClicked" Style="{StaticResource AccentButtonStyle}" />
+                        <Button Grid.Column="2" Content="🔄 Refresh" Click="OnRefreshScreenshotClicked" />
+                        <Button Grid.Column="3" Content="⚡ Wake" Click="OnWakeClicked" />
+                    </Grid>
+
+                    <!-- Live Screen Viewer -->
+                    <Border Grid.Row="1" Background="#111111" CornerRadius="8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <Image x:Name="ScreenImage" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Computer Controls & Status -->
+                    <Grid Grid.Row="2">
+                        <TextBlock x:Name="ComputerStatusText" Text="Headless browser ready (1280x800)" FontSize="12"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Content="Sleep" Click="OnSleepClicked" />
+                            <Button Content="Reset Browser" Click="OnResetComputerClicked" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </TabViewItem>
+
+            <!-- TAB 3: FILES -->
+            <TabViewItem Header="Files" IconSource="{StaticResource FolderIconSource}">
+                <Grid Padding="24,16" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <TextBlock Text="Persistent Workspace Files" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Content="🔄 Refresh" Click="OnRefreshFilesClicked" />
+                            <Button Content="📂 Open Folder" Click="OnOpenWorkspaceFolderClicked" />
+                        </StackPanel>
+                    </Grid>
+
+                    <ListView Grid.Row="1" x:Name="WorkspaceFilesListView" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                              BorderThickness="1" CornerRadius="8" SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:FileEntry">
+                                <Grid Padding="12,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE8B7;" FontSize="16" Margin="0,0,10,0" />
+                                    <TextBlock Grid.Column="1" Text="{x:Bind Path}" FontWeight="Medium" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{x:Bind Size}" FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </TabViewItem>
+
+            <!-- TAB 4: SETUP -->
+            <TabViewItem Header="Setup" IconSource="{StaticResource SettingsIconSource}">
+                <ScrollViewer Padding="24,16">
+                    <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
+                        <!-- Identity Section -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Agent Identity" FontSize="18" FontWeight="SemiBold" />
+                            <TextBox x:Name="SetupNameInput" Header="Name" />
+                            <TextBox x:Name="SetupPurposeInput" Header="Purpose / Role" />
+                            <TextBox x:Name="SetupInstructionsInput" Header="Instructions" AcceptsReturn="True" Height="100" />
+                            <ToggleSwitch x:Name="SetupLocalAccessSwitch" Header="Allow access to user's Windows computer" />
+                            <Button Content="Save Identity" Style="{StaticResource AccentButtonStyle}" Click="OnSaveIdentityClicked" />
+                        </StackPanel>
+
+                        <!-- Rules Section -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Security &amp; Approval Rules" FontSize="18" FontWeight="SemiBold" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="NewRuleInput" PlaceholderText="When wanting to &lt;action&gt;, ask first..." />
+                                <Button Grid.Column="1" Content="+ Add Rule" Click="OnAddRuleClicked" />
+                            </Grid>
+                            <ListView x:Name="RulesListView" SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Rule">
+                                        <Grid Padding="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{x:Bind Action}" VerticalAlignment="Center" />
+                                            <Border Grid.Column="1" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="6,2" Margin="8,0">
+                                                <TextBlock Text="{x:Bind Decision}" FontSize="11" />
+                                            </Border>
+                                            <Button Grid.Column="2" Content="✕" Click="OnDeleteRuleClicked" Tag="{x:Bind Id}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+
+                        <!-- Danger Zone -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Danger Zone" FontSize="18" FontWeight="SemiBold" Foreground="#E53935" />
+                            <Button Content="Delete Dot" Background="#E53935" Foreground="White" Click="OnDeleteDotClicked" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabViewItem>
+        </TabView>
+    </Grid>
+</Page>
