@@ -5,89 +5,106 @@
 [![Target OS](https://img.shields.io/badge/Platform-Windows%2010%20x64%20(22H2+)%20%7C%20Windows%2011-0078D7.svg)](https://www.microsoft.com/windows)
 [![Tests](https://img.shields.io/badge/Tests-15%2F15%20Passing%20(100%25)-brightgreen.svg)]()
 [![Architecture](https://img.shields.io/badge/Arch-100%25%20Native%20Desktop-orange.svg)]()
+[![Release](https://img.shields.io/badge/Release-v1.0.0-success.svg)](https://github.com/gnustella-lab/open-dot-windows/releases/tag/v1.0.0)
 
-> **Port NATIVO e Completo do Open Dot para Windows 10 x64 e Windows 11.**
-> Reimplementação genuína em C# 12, .NET 8 LTS e WinUI 3 com Windows App SDK.
-> **Zero Electron. Zero Tauri. Zero WebView2 na interface. Zero Node.js em produção.**
-
----
-
-## 🚀 Destaques da Implementação Nativa
-
-- **Interface Gráfica 100% Nativa (WinUI 3):** Construída com controles nativos XAML (`NavigationView`, `TabView`, `ListView`, `GridView`, `ContentDialog`), temas Claro e Escuro, animações suaves e renderização fluida acelerada por hardware.
-- **Motor de Agentes Autônomos em C#:** Ciclos de vida completos de threads de agentes (`AgentRuntime`), streaming em tempo real, suporte a cancelamento, pausa, persistência de memória e chamadas de ferramentas (*Function Calling*).
-- **Cartões de Interação e Segurança:** Cartões nativos de aprovação (`ApprovalCardControl`) para ações sensíveis e cartões de resposta (`QuestionCardControl`) para perguntas interativas dos agentes.
-- **Automação de Navegador Isolada:** Utiliza `Microsoft.Playwright` para automação web em segundo plano, com perfis persistentes e isolados por Dot em `%LOCALAPPDATA%\OpenDot\dots\<id>\browser`. Inspeção segura de processos via WMI/CommandLine para evitar interferência com o navegador do usuário.
-- **Armazenamento Seguro com DPAPI:** Cofre de credenciais protegido pela **Windows Data Protection API (DPAPI)** e criptografia autenticada **AES-256-GCM**.
-- **Banco de Dados Local SQLite:** Gerenciado via `Microsoft.Data.Sqlite`, modo WAL (*Write-Ahead Logging*) ativo para alto desempenho concorrente e migrações automáticas.
-- **Agendamento de Rotinas:** Execução de rotinas e tarefas em segundo plano baseadas em cron via `Cronos`.
-- **Integrações de IA e Ferramentas:** Suporte a OpenAI (streaming SSE), OpenRouter (centenas de modelos) e Composio (Gmail, GitHub, Slack, Notion, etc.).
-- **Distribuição Standalone e Portátil:** Compilação autocontida (self-contained) que gera um executável Win32 comum, executável sem privilégios de administrador e sem exigir instalação prévia do .NET Runtime pelo usuário final.
+> **Official 100% Native Windows Desktop Port of Open Dot for Windows 10 x64 and Windows 11.**
+> Genuine reimplementation in C# 12, .NET 8 LTS, and WinUI 3 with the Windows App SDK.
+> **Zero Electron. Zero Tauri. Zero WebView2 UI wrappers. Zero Node.js runtime required in production.**
 
 ---
 
-## 📁 Estrutura da Solução
+## 🚀 Key Highlights
+
+- **100% Native Graphical Interface (WinUI 3):** Built entirely with native XAML controls (`NavigationView`, `TabView`, `ListView`, `GridView`, `ContentDialog`), hardware acceleration, smooth Fluent animations, and Dark/Light theme switching.
+- **Autonomous Multi-Agent Runtime in C#:** Complete agent thread lifecycle (`AgentRuntime`), real-time character-by-character token streaming, pause, cancel, memory persistence, and structured tool calling.
+- **Interactive Security Cards:** Native approval cards (`ApprovalCardControl`) for risky actions (Allow / Always Allow / Deny) and question cards (`QuestionCardControl`) for agent queries.
+- **Isolated Browser Automation:** Uses `Microsoft.Playwright` for background browser tasks with independent, persistent profiles per Dot under `%LOCALAPPDATA%\OpenDot\dots\<id>\browser`. Includes safe WMI process inspection to manage Dot-specific browser instances without affecting the user's regular browser.
+- **Hardware-Backed Security with Windows DPAPI:** API keys (OpenAI, OpenRouter, Composio) and website credentials encrypted with authenticated **AES-256-GCM** sealed by the **Windows Data Protection API (DPAPI)**.
+- **Local SQLite Storage with WAL:** High-concurrency local database using `Microsoft.Data.Sqlite` in WAL (Write-Ahead Logging) mode with automatic migrations at `%LOCALAPPDATA%\OpenDot\dots.db`.
+- **Scheduled Background Routines:** Autonomous background job execution via cron expressions powered by `Cronos`.
+- **Ecosystem & AI Integrations:** Full support for OpenAI (SSE streaming), OpenRouter (hundreds of models), and Composio (Gmail, GitHub, Slack, Notion, etc.).
+- **Standalone Distribution & Installer:** Self-contained executable with embedded runtimes. Operates without administrator privileges and requires no pre-installed .NET runtimes from the end user.
+
+---
+
+## 📁 Repository Structure
 
 ```text
 OpenDot.Windows/
 ├── src/
-│   ├── OpenDot.App/             # Interface gráfica nativa WinUI 3 e ViewModels (MVVM)
-│   ├── OpenDot.Core/            # Entidades, AgentRuntime, ReviewEngine, Agendador, Interfaces
-│   ├── OpenDot.Infrastructure/  # SQLite (WAL), Cofre DPAPI + AES-GCM, Notificações, Bandeja
-│   ├── OpenDot.Integrations/    # Clientes de API (OpenAI, OpenRouter, Composio)
-│   └── OpenDot.Automation/      # Playwright, Workspaces, Gerenciamento de Processos Win32
+│   ├── OpenDot.App/             # WinUI 3 native desktop UI & MVVM ViewModels
+│   ├── OpenDot.Core/            # Domain entities, AgentRuntime, ReviewEngine, Scheduler, Interfaces
+│   ├── OpenDot.Infrastructure/  # SQLite (WAL), DPAPI + AES-GCM Vault, Windows Notifications, Tray Icon
+│   ├── OpenDot.Integrations/    # Async API clients (OpenAI, OpenRouter, Composio)
+│   └── OpenDot.Automation/      # Playwright browser manager, Workspaces, Win32 Process inspection
 ├── tests/
-│   └── OpenDot.Tests/           # Suíte de testes automatizados (xUnit)
+│   └── OpenDot.Tests/           # Automated unit test suite (xUnit, 15/15 passing)
 ├── packaging/
-│   ├── build-package.ps1        # Script de empacotamento e geração de ZIP portátil
-│   └── installer.iss            # Script do instalador Inno Setup (instalação per-user sem admin)
+│   ├── build-package.ps1        # Standalone packaging script generating portable ZIP & installer
+│   └── installer.iss            # Inno Setup script for per-user installation without admin rights
 ├── docs/
-│   ├── MIGRATION_AUDIT.md       # Análise completa do código original e matriz de paridade
-│   ├── ARCHITECTURE.md          # Especificação detalhada da arquitetura do sistema
-│   └── GETTING_STARTED.md       # Guia de desenvolvimento, compilação e testes
+│   ├── MIGRATION_AUDIT.md       # Full dependency audit & parity matrix from original repository
+│   ├── ARCHITECTURE.md          # Architectural specification and data flow diagrams
+│   └── GETTING_STARTED.md       # Developer build, test, and execution guide
 ├── .github/workflows/
-│   └── windows-build.yml        # CI/CD automatizado no GitHub Actions
-├── dist/                        # Binários de release gerados
-└── OpenDot.Windows.sln          # Solução Visual Studio / .NET 8
+│   └── windows-build.yml        # Automated CI/CD pipeline on GitHub Actions
+├── dist/                        # Release output directory
+└── OpenDot.Windows.sln          # Visual Studio / .NET 8 solution
 ```
 
 ---
 
-## 🛠️ Como Compilar e Executar
+## 🛠️ Build and Run Instructions
 
-### 1. Compilação da Solução
+### Prerequisites
+- Windows 10 Version 22H2 (Build 19045+) or Windows 11.
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (8.0.400 or later).
+
+### 1. Build the Solution
 ```powershell
+cd OpenDot.Windows
 dotnet build OpenDot.Windows.sln -p:WindowsPackageType=None
 ```
 
-### 2. Executar os Testes Unitários
+### 2. Run the Unit Test Suite
 ```powershell
 dotnet test tests/OpenDot.Tests/OpenDot.Tests.csproj
 ```
 
-### 3. Iniciar o Aplicativo
+### 3. Launch the Application
 ```powershell
 dotnet run --project src/OpenDot.App/OpenDot.App.csproj -p:WindowsPackageType=None
 ```
 
-### 4. Gerar Distribuição Portátil de Produção
+### 4. Produce Standalone Release Package & Installer
 ```powershell
 powershell -ExecutionPolicy Bypass -File packaging/build-package.ps1
 ```
-O pacote `.zip` autocontido pronto para uso será gerado em `dist/OpenDot-Windows-v1.0.0-x64.zip`.
+
+The script produces:
+- **Installer:** `dist/installer/OpenDot-Windows-Setup-1.0.0.exe`
+- **Portable ZIP:** `dist/OpenDot-Windows-v1.0.0-x64.zip`
 
 ---
 
-## 🔒 Segurança e Privacidade
+## 📥 Downloads
 
-- **Proteção por Usuário:** As credenciais de API salvas nunca ficam em texto simples; a chave-mestre é selada pelo subsistema DPAPI do Windows vinculada ao login do usuário.
-- **Isolamento de Workspaces:** Cada Dot possui um diretório isolado de trabalho. O acesso ao computador do usuário requer permissão explícita configurada no Setup do Dot e confirmação via cartão de aprovação.
-- **Zero Telemetria Oculta:** Todas as requisições de IA e dados permanecem estritamente entre a máquina do usuário e os provedores configurados.
+Ready-to-use binaries are available on the [GitHub Releases page](https://github.com/gnustella-lab/open-dot-windows/releases/tag/v1.0.0):
+- **[Windows Setup Installer (.exe)](https://github.com/gnustella-lab/open-dot-windows/releases/download/v1.0.0/OpenDot-Windows-Setup-1.0.0.exe)**
+- **[Portable ZIP Package (.zip)](https://github.com/gnustella-lab/open-dot-windows/releases/download/v1.0.0/OpenDot-Windows-v1.0.0-x64.zip)**
 
 ---
 
-## 📚 Documentação Adicional
+## 🔒 Security & Privacy
 
-- [Auditoria e Mapeamento de Dependências](docs/MIGRATION_AUDIT.md)
-- [Especificação de Arquitetura do Sistema](docs/ARCHITECTURE.md)
-- [Guia de Inicialização e Desenvolvimento](docs/GETTING_STARTED.md)
+- **Per-User Isolation:** Master keys and credentials are never stored in plaintext; they are protected by the Windows DPAPI subsystem tied to the user's Windows login.
+- **Workspace Sandboxing:** Each Dot operates within its own dedicated directory (`%LOCALAPPDATA%\OpenDot\dots\<id>\workspace`). Access to the user's personal file system requires explicit configuration in the Dot's Setup tab and approval via interactive cards.
+- **Zero Hidden Telemetry:** All LLM communications occur directly between the user's machine and their configured AI providers.
+
+---
+
+## 📚 Documentation
+
+- [Migration Audit & Dependency Matrix](docs/MIGRATION_AUDIT.md)
+- [System Architecture Specification](docs/ARCHITECTURE.md)
+- [Getting Started Guide](docs/GETTING_STARTED.md)

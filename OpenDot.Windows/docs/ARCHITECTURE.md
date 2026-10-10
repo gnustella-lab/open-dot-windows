@@ -1,10 +1,10 @@
-# Arquitetura do Open Dot for Windows
+# Open Dot for Windows — System Architecture
 
-## 1. Visão Geral do Sistema
+## 1. System Overview
 
-O **Open Dot for Windows** é uma implementação 100% nativa do assistente autônomo Open Dot para **Windows 10 x64 (22H2 / build 19045+)** e **Windows 11**. 
+**Open Dot for Windows** is a 100% native implementation of the Open Dot autonomous AI assistant system for **Windows 10 x64 (Version 22H2 / Build 19045+)** and **Windows 11**.
 
-Ao contrário de empacotamentos web (Electron, Tauri ou wrappers com WebView2), o projeto foi reconstruído do zero em **C# 12**, **.NET 8 LTS** e **WinUI 3 com Windows App SDK**. Ele elimina completamente a dependência de Node.js, pnpm e servidores web em produção, proporcionando uma experiência de desktop com consumo mínimo de recursos, inicialização imediata e segurança integrada ao sistema operacional Windows.
+Unlike web-wrapped solutions (Electron, Tauri, or WebView2 wrappers), the application is built from scratch in **C# 12**, **.NET 8 LTS**, and **WinUI 3 with the Windows App SDK**. It completely removes any runtime dependency on Node.js, pnpm, and local web servers, delivering an authentic desktop software experience with minimal memory footprint, instant startup, and hardware-accelerated rendering.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -17,9 +17,9 @@ Ao contrário de empacotamentos web (Electron, Tauri ou wrappers com WebView2), 
 ┌─────────────────────────────────▼──────────────────────────────────────┐
 │                   OpenDot.Core (Class Library net8.0)                  │
 │  - Models (Dot, Look, Message, CardData, Channel, Memory, Skill, Rule) │
-│  - AgentRuntime (Streaming, Thread Loop, Pausabilidade, Tool Engine)   │
-│  - ReviewEngine (Políticas de segurança, aprovações, Always-Allow)      │
-│  - RoutineScheduler (Cron agendado via Cronos)                         │
+│  - AgentRuntime (Streaming, Thread Loop, Pausability, Tool Engine)     │
+│  - ReviewEngine (Security policies, card approvals, Always-Allow)      │
+│  - RoutineScheduler (Cron scheduling via Cronos)                       │
 │  - PromptBuilder, ToolRegistry & Interfaces (IDotRepository, etc.)     │
 └─────────┬───────────────────────┬────────────────────────────┬─────────┘
           │                       │                            │
@@ -38,103 +38,103 @@ Ao contrário de empacotamentos web (Electron, Tauri ou wrappers com WebView2), 
 
 ---
 
-## 2. Camadas da Aplicação
+## 2. Layered Architecture
 
-### 2.1. OpenDot.App (Interface WinUI 3)
-- **Tecnologia:** WinUI 3 (Windows App SDK 1.5+), XAML nativo compilado.
-- **Padrão:** MVVM (Model-View-ViewModel) estrito.
-- **Injeção de Dependências:** Configurada em `AppServices.cs` com `ServiceCollection`.
-- **Janela e Telas:**
-  - `MainWindow`: `NavigationView` com navegação fluida entre telas, pesquisa de agentes e botão rápido de criação.
-  - `HomePage`: Visão geral dos Dots, estatísticas e atalhos rápidos.
-  - `DotPage`: Workspace completo com abas (*Chat*, *Computer*, *Files*, *Setup*).
-  - `ChannelsPage`: Gerenciador de canais para comunicação entre múltiplos Dots.
-  - `AppsPage`: Catálogo de integrações do Composio (Gmail, GitHub, Slack, Notion, etc.).
-  - `SettingsPage`: Configuração de chaves de API, provedor padrão e preferências visuais.
-  - `VoiceDialog`: Diálogo nativo para chamadas de voz com animação de onda sonora em tempo real.
-  - `ApprovalCardControl` & `QuestionCardControl`: Cartões interativos incorporados nas conversas para confirmação de ações perigosas e perguntas interativas do agente.
+### 2.1. OpenDot.App (WinUI 3 Presentation Layer)
+- **Technology:** WinUI 3 (Windows App SDK 1.5+), compiled native XAML.
+- **Pattern:** Strict MVVM (Model-View-ViewModel).
+- **Dependency Injection:** Configured in `AppServices.cs` with `Microsoft.Extensions.DependencyInjection`.
+- **Views & Windows:**
+  - `MainWindow`: `NavigationView` container with seamless page transitions, agent search, and quick Dot creation.
+  - `HomePage`: Overview of active Dots, system statistics, and quick-access cards.
+  - `DotPage`: Comprehensive agent workspace featuring 4 tabs (*Chat*, *Computer*, *Files*, *Setup*).
+  - `ChannelsPage`: Multi-agent channel manager facilitating inter-Dot collaboration.
+  - `AppsPage`: Integration hub for Composio apps (Gmail, GitHub, Slack, Notion, Calendar, etc.).
+  - `SettingsPage`: Management of API keys, default LLM provider, and theme settings.
+  - `VoiceDialog`: Native voice dialog with real-time waveform animation.
+  - `ApprovalCardControl` & `QuestionCardControl`: Embedded interactive cards within the conversation stream for approving sensitive actions and answering agent questions.
 
-### 2.2. OpenDot.Core (Motor Cognitivo e Domínio)
-- **Totalmente desacoplado de UI e APIs específicas de sistema operacional.**
+### 2.2. OpenDot.Core (Cognitive & Domain Layer)
+- **Decoupled from UI and operating system dependencies.**
 - **`AgentRuntime`:**
-  - Ciclo de vida dos agentes: `Idle` -> `Thinking` -> `ToolCalling` -> `AwaitingApproval` -> `Paused` -> `Error`.
-  - Suporte a streaming de respostas via `IAsyncEnumerable<string>`.
-  - Tratamento de pausa e retomada idempotente.
-  - Cancelamento limpo via `CancellationTokenSource`.
+  - Manages agent thread lifecycles: `Idle` -> `Thinking` -> `ToolCalling` -> `AwaitingApproval` -> `Paused` -> `Error`.
+  - Real-time token streaming via `IAsyncEnumerable<string>`.
+  - Pause and resume idempotency.
+  - Graceful cancellation using `CancellationTokenSource`.
 - **`ReviewEngine`:**
-  - Avaliação de políticas de segurança antes da execução de ferramentas (ex: execução de comandos no computador do usuário, exclusão de arquivos, chamadas a APIs externas).
-  - Geração de cartões de aprovação (`CardData`) e persistência de regras de auto-aprovação (*Always Allow*).
+  - Evaluates security rules before executing external actions (e.g., executing commands on the host machine, file mutations, external API calls).
+  - Emits approval cards (`CardData`) and persists user preferences (*Always Allow* rules).
 - **`RoutineScheduler`:**
-  - Agendamento de tarefas autônomas em segundo plano com expressões cron padrão (ex: `0 9 * * *`).
-  - Execução desacoplada usando a biblioteca `Cronos`.
+  - Manages background scheduled routines using standard cron expressions (e.g., `0 9 * * *`).
+  - Powered by the `Cronos` library.
 
-### 2.3. OpenDot.Infrastructure (Persistência, Segurança e Windows APIs)
+### 2.3. OpenDot.Infrastructure (Persistence, Security, & Windows APIs)
 - **`SqliteDotRepository`:**
-  - Armazenamento local em `%LOCALAPPDATA%\OpenDot\dots.db`.
-  - Modo WAL (*Write-Ahead Logging*) ativo para alto desempenho concorrente.
-  - Auto-migrações automáticas de schema na inicialização.
+  - Relational persistence in `%LOCALAPPDATA%\OpenDot\dots.db`.
+  - Configured with WAL (*Write-Ahead Logging*) mode for high-concurrency read/write operations.
+  - Automatic database schema migrations upon initialization.
 - **`DpapiVault`:**
-  - Chave-mestre derivada protegida via **Windows DPAPI** (`ProtectedData.Protect`).
-  - Criptografia autenticada **AES-256-GCM** para todas as credenciais sensíveis (chaves OpenAI, OpenRouter, Composio, senhas de perfis).
-  - Isolamento seguro por usuário do Windows, sem chaves em texto claro em disco.
-- **`SystemTrayManager` & `NotificationService`:**
-  - Notificações nativas do Windows e ícone na bandeja do sistema para execução ininterrupta em segundo plano.
+  - Hardware-backed master key protection via **Windows DPAPI** (`ProtectedData.Protect` with `DataProtectionScope.CurrentUser`).
+  - Authenticated **AES-256-GCM** encryption for all stored credentials (OpenAI, OpenRouter, Composio API keys, saved website logins).
+  - Isolated per Windows user account with zero plaintext tokens written to disk.
+- **`SystemTrayManager` & `WindowsNotificationService`:**
+  - Win32 notification icon (`Shell_NotifyIcon`) allowing the application to run quietly in the background, complemented by Windows Toast notifications.
 
-### 2.4. OpenDot.Automation (Navegação Web e Computador)
+### 2.4. OpenDot.Automation (Browser & Computer Automation)
 - **`PlaywrightBrowserManager`:**
-  - Instâncias isoladas do Chromium por Dot, armazenadas em `%LOCALAPPDATA%\OpenDot\dots\<dotId>\browser`.
-  - Persistência total de cookies, sessões e logins.
-  - Detecção segura de processos via WMI (`Win32_Process` com `CommandLine`), garantindo que apenas processos Chromium do Dot específico sejam gerenciados, sem afetar o navegador do usuário.
+  - Independent Chromium browser instances per Dot stored under `%LOCALAPPDATA%\OpenDot\dots\<dotId>\browser`.
+  - Complete persistence of cookies, sessions, and authentication state.
+  - Safe process management via WMI (`Win32_Process` filtered by the Dot's unique `--user-data-dir`), ensuring that only the specific agent's browser is recycled without terminating the user's personal browser.
 - **`CommandRunner` & `ComputerManager`:**
-  - Execução de comandos no workspace isolado de cada Dot (`%LOCALAPPDATA%\OpenDot\dots\<dotId>\workspace`) ou no computador do usuário quando explicitamente autorizado.
-  - Captura periódica de tela para exibição no painel nativo *Computer*.
+  - Executes shell commands within each Dot's sandboxed workspace (`%LOCALAPPDATA%\OpenDot\dots\<dotId>\workspace`) or on the host machine when explicitly granted permission.
+  - Periodic viewport capture rendered inside the native *Computer* tab.
 
-### 2.5. OpenDot.Integrations (Provedores de Inteligência e Ecossistema)
-- **`OpenAiClient`:** Chamadas nativas via `System.Net.Http`, streaming Server-Sent Events (SSE), function calling estruturado.
-- **`OpenRouterClient`:** Acesso a centenas de modelos de IA (Claude, Llama, DeepSeek, Mistral) mantendo compatibilidade de API.
-- **`ComposioClient`:** Conexão nativa com centenas de ferramentas externas, autenticação OAuth e execução remota de ações.
+### 2.5. OpenDot.Integrations (AI & External Ecosystem)
+- **`OpenAiClient`:** Native asynchronous HTTP client supporting Server-Sent Events (SSE) streaming and structured function calling.
+- **`OpenRouterClient`:** Seamless access to open and proprietary LLMs (Claude, Llama, DeepSeek, Mistral, Qwen).
+- **`ComposioClient`:** Direct integration adapter for Composio toolkits, OAuth management, and external action execution.
 
 ---
 
-## 3. Fluxo de Execução de Mensagens e Ferramentas
+## 3. Data Flow Diagram
 
 ```
-[ Usuário digita na UI ]
-         │
-         ▼
+[ User Input in WinUI Chat ]
+             │
+             ▼
 [ DotViewModel.SendMessageAsync ]
-         │
-         ▼
+             │
+             ▼
 [ AgentRuntime.RunThreadAsync ]
-         │
-         ├───▶ Monta prompt dinâmico (PromptBuilder + Memória + Regras)
-         │
-         ├───▶ Chama LLM (OpenAI / OpenRouter) com streaming SSE
-         │      │
-         │      └──▶ Atualiza UI em tempo real caractere por caractere
-         │
-         ├───▶ Detecta intenção de Tool Calling
-         │      │
-         │      ▼
-         │   [ ReviewEngine.EvaluateActionAsync ]
-         │      ├── Ação Permitida? ───▶ Executa Ferramenta
-         │      └── Ação Sensível?  ───▶ Emite ApprovalCardControl na UI
-         │                                (Aguarda resposta do usuário)
-         │
-         ├───▶ Executa ferramenta (PlaywrightBrowser / CommandRunner / Composio)
-         │
-         └───▶ Persiste mensagem e estado no SQLite (SqliteDotRepository)
+             │
+             ├───▶ Build Context Prompt (PromptBuilder + Memories + Rules)
+             │
+             ├───▶ Call LLM (OpenAI / OpenRouter) via SSE Streaming
+             │      │
+             │      └──▶ Update UI in real time (token by token)
+             │
+             ├───▶ Detect Tool Calling intent
+             │      │
+             │      ▼
+             │   [ ReviewEngine.EvaluateActionAsync ]
+             │      ├── Allowed?  ───▶ Execute Tool immediately
+             │      └── Sensitive? ──▶ Display ApprovalCardControl in UI
+             │                          (Awaits user confirmation)
+             │
+             ├───▶ Execute Tool (PlaywrightBrowser / CommandRunner / Composio)
+             │
+             └───▶ Persist thread state and messages to SQLite (SqliteDotRepository)
 ```
 
 ---
 
-## 4. Requisitos de Compatibilidade e Distribuição
+## 4. Platform Compatibility & Distribution Specifications
 
-| Aspecto | Especificação |
+| Requirement | Specification |
 |---|---|
-| **Sistema Operacional** | Windows 10 versão 22H2 (build 19045+) e Windows 11 (build 22000+) |
-| **Arquitetura** | x64 (AMD64 / Intel 64-bit) |
-| **Privilégios** | Usuário padrão (não requer privilégios de administrador) |
-| **Tipo de Pacote** | Standalone unpackaged (`WindowsPackageType=None`) ou instalador Inno Setup |
-| **Dependências em Produção** | Nenhuma (Self-Contained .NET 8 Runtime + Windows App SDK embutidos) |
-| **Armazenamento de Dados** | `%LOCALAPPDATA%\OpenDot\` |
+| **Target OS** | Windows 10 Version 22H2 (Build 19045+) & Windows 11 (Build 22000+) |
+| **Architecture** | x64 (AMD64 / Intel 64-bit) |
+| **Execution Privileges** | Standard User (No administrator privileges required) |
+| **Package Format** | Standalone unpackaged (`WindowsPackageType=None`) & Inno Setup installer |
+| **Production Runtime** | Self-Contained (.NET 8 runtime & Windows App SDK binaries embedded) |
+| **Local App Storage** | `%LOCALAPPDATA%\OpenDot\` |

@@ -1,87 +1,87 @@
-# Guia de Inicialização e Desenvolvimento: Open Dot for Windows
+# Getting Started & Development Guide: Open Dot for Windows
 
-Este guia orienta como compilar, testar, empacotar e executar o **Open Dot for Windows** em máquinas **Windows 10 x64** ou **Windows 11**.
+This guide explains how to compile, test, package, and run **Open Dot for Windows** on **Windows 10 x64** or **Windows 11**.
 
 ---
 
-## 1. Pré-requisitos de Desenvolvimento
+## 1. Development Prerequisites
 
-Para compilar o projeto a partir do código-fonte:
+To build the project from source:
 
-- **Sistema Operacional:** Windows 10 Versão 22H2 (Build 19045 ou superior) ou Windows 11.
-- **SDK .NET 8 LTS:** (.NET 8.0.400 ou superior).
-- *(Opcional)* **Visual Studio 2022** (com as cargas de trabalho *.NET Desktop Development* e *Windows App SDK*) ou **Visual Studio Code** com a extensão C# Dev Kit.
-- *(Opcional para instalador setup.exe)* **Inno Setup 6**.
+- **Operating System:** Windows 10 Version 22H2 (Build 19045 or later) or Windows 11.
+- **.NET 8 LTS SDK:** (.NET 8.0.400 or later).
+- *(Optional)* **Visual Studio 2022** (with the *.NET Desktop Development* workload) or **Visual Studio Code** with the C# Dev Kit extension.
+- *(Optional for building the installer .exe)* **Inno Setup 6**.
 
 > [!NOTE]
-> Nenhum runtime de Node.js, pnpm, Python ou Electron é necessário para compilar ou executar o Open Dot for Windows.
+> Node.js, pnpm, Python, and Electron runtimes are NOT required to build or run Open Dot for Windows.
 
 ---
 
-## 2. Compilação da Solução
+## 2. Building the Solution
 
-Abra um terminal PowerShell na pasta `OpenDot.Windows`:
+Open PowerShell and navigate to the `OpenDot.Windows` directory:
 
 ```powershell
 cd OpenDot.Windows
 
-# 1. Restaure os pacotes NuGet
+# 1. Restore NuGet packages
 dotnet restore OpenDot.Windows.sln
 
-# 2. Compile a solução inteira em modo Debug
+# 2. Build the complete solution in Debug mode
 dotnet build OpenDot.Windows.sln -p:WindowsPackageType=None
 ```
 
-A flag `-p:WindowsPackageType=None` configura o Windows App SDK para compilação unpackaged, permitindo que o aplicativo seja executado diretamente como um executável Win32 comum, sem necessidade de registro de pacote MSIX ou modo de desenvolvedor.
+The `-p:WindowsPackageType=None` flag configures the Windows App SDK for unpackaged desktop execution, enabling the application to run directly as a standard Win32 executable without MSIX package registration or developer mode certificates.
 
 ---
 
-## 3. Execução dos Testes Automatizados
+## 3. Running Automated Tests
 
-O projeto inclui uma suíte abrangente de testes unitários cobrindo o banco de dados SQLite, o cofre de segurança DPAPI com AES-256-GCM, o motor de regras de segurança (ReviewEngine) e os clientes de API:
+The solution includes an automated unit test suite covering the SQLite database, DPAPI vault with AES-256-GCM, the ReviewEngine security policies, and AI API clients:
 
 ```powershell
 dotnet test tests/OpenDot.Tests/OpenDot.Tests.csproj
 ```
 
-**Resultado esperado:**
+**Expected Output:**
 ```text
-Aprovado! – Com falha: 0, Aprovado: 15, Ignorado: 0, Total: 15, Duração: ~400 ms
+Passed!  – Failed: 0, Passed: 15, Skipped: 0, Total: 15, Duration: ~370 ms
 ```
 
 ---
 
-## 4. Executando o Aplicativo
+## 4. Running the Application
 
-Para iniciar o aplicativo diretamente em modo de depuração:
+To launch the app directly in debug mode:
 
 ```powershell
 dotnet run --project src/OpenDot.App/OpenDot.App.csproj -p:WindowsPackageType=None
 ```
 
-Ou execute o binário compilado:
+Or execute the compiled binary directly:
 ```powershell
 .\src\OpenDot.App\bin\Debug\net8.0-windows10.0.19041.0\win-x64\OpenDot.App.exe
 ```
 
 ---
 
-## 5. Geração do Pacote de Distribuição (Release)
+## 5. Generating Release Packages & Installer
 
-Para gerar uma distribuição de produção portátil e autocontida (self-contained), sem dependências externas:
+To generate an optimized, self-contained release package:
 
-### Método Automático (via script PowerShell):
+### Automated Packaging (Recommended):
 ```powershell
 powershell -ExecutionPolicy Bypass -File packaging/build-package.ps1
 ```
 
-O script realizará:
-1. Compilação otimizada em `Release` para a arquitetura `win-x64`.
-2. Geração da pasta com executável e bibliotecas em `OpenDot.Windows/dist/OpenDot-win-x64/`.
-3. Compactação automática em `OpenDot.Windows/dist/OpenDot-Windows-v1.0.0-x64.zip`.
-4. Compilação do instalador `OpenDot-Windows-Setup-1.0.0.exe` (caso o Inno Setup esteja instalado).
+This script automatically executes:
+1. Optimized Release build targeting `win-x64`.
+2. Standalone packaging under `OpenDot.Windows/dist/OpenDot-win-x64/`.
+3. Portable archive generation: `OpenDot.Windows/dist/OpenDot-Windows-v1.0.0-x64.zip`.
+4. Inno Setup compilation (if installed): `OpenDot.Windows/dist/installer/OpenDot-Windows-Setup-1.0.0.exe`.
 
-### Método Manual (via dotnet CLI):
+### Manual CLI Publish:
 ```powershell
 dotnet publish src/OpenDot.App/OpenDot.App.csproj `
   -c Release `
@@ -94,29 +94,29 @@ dotnet publish src/OpenDot.App/OpenDot.App.csproj `
 
 ---
 
-## 6. Configuração Inicial e Chaves de API
+## 6. Initial Configuration & API Keys
 
-Ao iniciar o Open Dot for Windows pela primeira vez:
+When opening Open Dot for Windows for the first time:
 
-1. Acesse o menu lateral **Settings**.
-2. Insira suas credenciais:
-   - **OpenAI API Key:** (opcional, para modelos GPT-4o, etc.).
-   - **OpenRouter API Key:** (opcional, para modelos Claude, DeepSeek, Llama, etc.).
-   - **Composio API Key:** (opcional, para integrações com Gmail, GitHub, Notion).
-3. Selecione o provedor e modelo padrão.
-4. Clique em **Save API Keys**.
+1. Navigate to the **Settings** view in the sidebar.
+2. Enter your API credentials:
+   - **OpenAI API Key:** (for GPT-4o, etc.).
+   - **OpenRouter API Key:** (for Claude, DeepSeek, Llama, Qwen, etc.).
+   - **Composio API Key:** (for app integrations such as Gmail, GitHub, Notion).
+3. Select your default provider and model.
+4. Click **Save API Keys**.
 
 > [!IMPORTANT]
-> Todas as chaves são criptografadas com **AES-256-GCM** e seladas pela **DPAPI do Windows** antes de serem salvas em disco. Nenhum token é armazenado em texto claro.
+> All credentials are encrypted with authenticated **AES-256-GCM** and sealed using the **Windows DPAPI** before being saved to disk. No plaintext keys are ever stored.
 
 ---
 
-## 7. Estrutura de Arquivos em Disco
+## 7. User Data Directory
 
-Os dados da aplicação em tempo de execução são armazenados na pasta de dados locais do usuário:
+Runtime data is stored under the user's local application directory:
 
-- **Banco de Dados SQLite:** `%LOCALAPPDATA%\OpenDot\dots.db`
-- **Cofre Criptográfico DPAPI:** `%LOCALAPPDATA%\OpenDot\vault.json`
-- **Workspaces dos Agentes:** `%LOCALAPPDATA%\OpenDot\dots\<dotId>\workspace\`
-- **Perfis de Navegador Isolados:** `%LOCALAPPDATA%\OpenDot\dots\<dotId>\browser\`
-- **Logs da Aplicação:** `%LOCALAPPDATA%\OpenDot\logs\`
+- **SQLite Database:** `%LOCALAPPDATA%\OpenDot\dots.db`
+- **Encrypted DPAPI Vault:** `%LOCALAPPDATA%\OpenDot\vault.json`
+- **Agent Workspaces:** `%LOCALAPPDATA%\OpenDot\dots\<dotId>\workspace\`
+- **Isolated Browser Profiles:** `%LOCALAPPDATA%\OpenDot\dots\<dotId>\browser\`
+- **Application Logs:** `%LOCALAPPDATA%\OpenDot\logs\`
