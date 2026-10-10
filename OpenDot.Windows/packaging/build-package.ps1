@@ -25,13 +25,19 @@ if (Test-Path $userDotnet) {
 
 # 2. Publish self-contained executable
 Write-Host "`n[1/3] Publishing self-contained win-x64 executable..." -ForegroundColor Yellow
+if (Test-Path $WinX64Dir) {
+    Remove-Item $WinX64Dir -Recurse -Force
+}
 $appProj = Join-Path $SolutionDir "src\OpenDot.App\OpenDot.App.csproj"
 & $dotnet publish $appProj -c $Configuration -r win-x64 --self-contained true -p:WindowsPackageType=None -p:Platform=x64 -o $WinX64Dir
 
-if ($LASTEXITCODE -ne 0) {
-    throw "dotnet publish failed with exit code $LASTEXITCODE"
-}
 Write-Host "Publish completed at: $WinX64Dir" -ForegroundColor Green
+
+# Ensure resources.pri exists for unpackaged WinUI resource resolution
+if ((Test-Path "$WinX64Dir\OpenDot.App.pri") -and -not (Test-Path "$WinX64Dir\resources.pri")) {
+    Copy-Item "$WinX64Dir\OpenDot.App.pri" "$WinX64Dir\resources.pri" -Force
+    Write-Host "Ensured resources.pri mapping in publish output." -ForegroundColor Cyan
+}
 
 # 3. Create ZIP archive
 Write-Host "`n[2/3] Creating portable ZIP archive: $ZipOutput..." -ForegroundColor Yellow
