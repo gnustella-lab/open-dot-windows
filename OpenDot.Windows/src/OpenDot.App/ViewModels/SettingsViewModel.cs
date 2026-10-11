@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OpenDot.Core.Interfaces;
 using OpenDot.Core.Models;
+using OpenDot.Integrations.OpenAI;
 
 namespace OpenDot.App.ViewModels;
 
@@ -10,6 +11,17 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IDotRepository _repo;
     private readonly ISecureVault _vault;
+    private readonly CodexAuthService _codexAuth;
+    private CancellationTokenSource? _loginCancellation;
+
+    [ObservableProperty]
+    private string _openAiAuthMode = "api_key";
+
+    [ObservableProperty]
+    private string _codexStatus = "Not signed in.";
+
+    [ObservableProperty]
+    private bool _isSigningIn;
 
     [ObservableProperty]
     private string _openAiApiKey = string.Empty;
@@ -41,16 +53,20 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    public SettingsViewModel(IDotRepository repo, ISecureVault vault)
+    public SettingsViewModel(IDotRepository repo, ISecureVault vault, CodexAuthService codexAuth)
     {
         _repo = repo;
         _vault = vault;
+        _codexAuth = codexAuth;
         LoadSettings();
     }
 
     [RelayCommand]
     public void LoadSettings()
     {
+        OpenAiAuthMode = _repo.GetSetting("openai_auth_mode") == "codex" ? "codex" : "api_key";
+        RefreshCodexStatus();
+
         var sealedOpenAi = _repo.GetSetting("openai_key");
         OpenAiApiKey = !string.IsNullOrEmpty(sealedOpenAi) ? _vault.Unseal(sealedOpenAi) : "";
 
@@ -76,6 +92,20 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public void SaveSettings()
     {
+        if (IsSigningIn) return;
+        if (OpenAiAuthMode == "codex" && !_codexAuth.IsSignedIn)
+        {
+            StatusMessage = "Sign in with ChatGPT / Codex before selecting this authentication method.";
+            return;
+        }
+
+        var previousMode = _repo.GetSetting("openai_auth_mode") ?? "api_key";
+        if (OpenAiAuthMode != previousMode)
+        {
+            DefaultModel = OpenAiAuthMode == "codex" ? CodexAiClient.DefaultModel : "gpt-4o";
+        }
+        _repo.SetSetting("openai_auth_mode", OpenAiAuthMode);
+
         if (!string.IsNullOrWhiteSpace(OpenAiApiKey))
             _repo.SetSetting("openai_key", _vault.Seal(OpenAiApiKey.Trim()));
         else
@@ -95,6 +125,70 @@ public partial class SettingsViewModel : ObservableObject
         _repo.SetSetting("computer_mode", ComputerMode);
 
         StatusMessage = "Settings saved securely to Windows DPAPI.";
+    }
+
+    public async Task SignInCodexAsync()
+    {
+        if (_loginCancellation != null) return;
+        using var cancellation = new CancellationTokenSource();
+        _loginCancellation = cancellation;
+        IsSigningIn = true;
+        CodexStatus = "Complete the ChatGPT / Codex sign-in in your browser.";
+        try
+        {
+            await _codexAuth.SignInAsync(cancellation.Token);
+            OpenAiAuthMode = "codex";
+            DefaultModel = CodexAiClient.DefaultModel;
+            _repo.SetSetting("openai_auth_mode", OpenAiAuthMode);
+            _repo.SetSetting("default_model", DefaultModel);
+            StatusMessage = "ChatGPT / Codex selected. Dots without a custom model now use the Codex default.";
+            RefreshCodexStatus();
+        }
+        catch (OperationCanceledException)
+        {
+            RefreshCodexStatus();
+            StatusMessage = "Codex sign-in cancelled.";
+        }
+        catch (Exception ex)
+        {
+            CodexStatus = $"Codex sign-in failed: {ex.Message}";
+        }
+        finally
+        {
+            _loginCancellation = null;
+            IsSigningIn = false;
+        }
+    }
+
+    public void CancelCodexSignIn() => _loginCancellation?.Cancel();
+
+    public void SignOutCodex()
+    {
+        if (IsSigningIn) return;
+        try
+        {
+            _codexAuth.SignOut();
+            RefreshCodexStatus();
+            StatusMessage = "Disconnected from OpenDot only. Select API key and save to use API billing; no automatic fallback.";
+        }
+        catch (Exception ex)
+        {
+            CodexStatus = $"Could not disconnect Codex: {ex.Message}";
+        }
+    }
+
+    private void RefreshCodexStatus()
+    {
+        try
+        {
+            CodexStatus = _codexAuth.IsSignedIn
+                ? $"Signed in: {_codexAuth.AccountLabel ?? "ChatGPT / Codex"}"
+                : "Not signed in.";
+        }
+        catch (Exception)
+        {
+            CodexStatus = "Stored Codex credentials could not be read. Disconnect and sign in again.";
+        }
     }
 
     [RelayCommand]

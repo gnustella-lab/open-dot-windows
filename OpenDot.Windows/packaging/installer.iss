@@ -22,6 +22,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist\installer
 OutputBaseFilename=OpenDot-Windows-Setup-{#MyAppVersion}
+SetupIconFile=..\src\OpenDot.App\Assets\AppIcon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

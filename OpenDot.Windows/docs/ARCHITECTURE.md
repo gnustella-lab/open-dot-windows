@@ -27,10 +27,9 @@ Unlike web-wrapped solutions (Electron, Tauri, or WebView2 wrappers), the applic
 │ OpenDot.Infrastructure  │ │ OpenDot.Integrations   │ │OpenDot.Automation│
 │ (net8.0-windows10.0)    │ │ (net8.0)               │ │(net8.0-windows) │
 │ - SqliteDotRepository   │ │ - OpenAiClient         │ │- PlaywrightMgr  │
-│   (WAL, Migrations)     │ │ - OpenRouterClient     │ │  (Isolated prof)│
-│ - DpapiVault            │ │ - ComposioClient       │ │- CommandRunner  │
-│   (AES-256-GCM + DPAPI) │ │   (REST/OAuth Adapter) │ │  (CMD/PowerShell│
-│ - NotificationService   │ │                        │ │- ComputerManager│
+│   (WAL, Migrations)     │ │ - CodexAuthService     │ │  (Isolated prof)│
+│ - DpapiVault            │ │ - CodexAiClient        │ │- CommandRunner  │
+│   (AES-256-GCM + DPAPI) │ │   (OAuth + Responses) │ │  (CMD/PowerShell│
 │ - SystemTrayManager     │ │                        │ │  (Screenshots,  │
 │   (Shell_NotifyIcon)    │ │                        │ │   Lock-free WMI)│
 └─────────────────────────┘ └────────────────────────┘ └─────────────────┘
@@ -50,7 +49,7 @@ Unlike web-wrapped solutions (Electron, Tauri, or WebView2 wrappers), the applic
   - `DotPage`: Comprehensive agent workspace featuring 4 tabs (*Chat*, *Computer*, *Files*, *Setup*).
   - `ChannelsPage`: Multi-agent channel manager facilitating inter-Dot collaboration.
   - `AppsPage`: Integration hub for Composio apps (Gmail, GitHub, Slack, Notion, Calendar, etc.).
-  - `SettingsPage`: Management of API keys, default LLM provider, and theme settings.
+  - `SettingsPage`: API key or ChatGPT / Codex authentication, default model, and credential-vault management.
   - `VoiceDialog`: Native voice dialog with real-time waveform animation.
   - `ApprovalCardControl` & `QuestionCardControl`: Embedded interactive cards within the conversation stream for approving sensitive actions and answering agent questions.
 
@@ -75,8 +74,7 @@ Unlike web-wrapped solutions (Electron, Tauri, or WebView2 wrappers), the applic
   - Automatic database schema migrations upon initialization.
 - **`DpapiVault`:**
   - Hardware-backed master key protection via **Windows DPAPI** (`ProtectedData.Protect` with `DataProtectionScope.CurrentUser`).
-  - Authenticated **AES-256-GCM** encryption for all stored credentials (OpenAI, OpenRouter, Composio API keys, saved website logins).
-  - Isolated per Windows user account with zero plaintext tokens written to disk.
+  - Authenticated API keys and Codex refresh credentials are encrypted and sealed with the **Windows Data Protection API (DPAPI)** for the current Windows user. Codex `access_token`, `refresh_token`, and `id_token` are only kept in the sealed local setting and memory while needed; account identifiers can be displayed, but secrets are never logged.
 - **`SystemTrayManager` & `WindowsNotificationService`:**
   - Win32 notification icon (`Shell_NotifyIcon`) allowing the application to run quietly in the background, complemented by Windows Toast notifications.
 
@@ -89,10 +87,9 @@ Unlike web-wrapped solutions (Electron, Tauri, or WebView2 wrappers), the applic
   - Executes shell commands within each Dot's sandboxed workspace (`%LOCALAPPDATA%\OpenDot\dots\<dotId>\workspace`) or on the host machine when explicitly granted permission.
   - Periodic viewport capture rendered inside the native *Computer* tab.
 
-### 2.5. OpenDot.Integrations (AI & External Ecosystem)
-- **`OpenAiClient`:** Native asynchronous HTTP client supporting Server-Sent Events (SSE) streaming and structured function calling.
-- **`OpenRouterClient`:** Seamless access to open and proprietary LLMs (Claude, Llama, DeepSeek, Mistral, Qwen).
-- **`ComposioClient`:** Direct integration adapter for Composio toolkits, OAuth management, and external action execution.
+`OpenAiClient` uses OpenAI Platform API keys and Chat Completions. `CodexAuthService` performs the browser-based ChatGPT OAuth flow with PKCE, state validation, and a loopback callback; its encrypted credentials are refreshed when needed. `CodexAiClient` uses the authenticated Codex Responses backend and sends full conversation/tool history with storage disabled. The OpenAI API-key and ChatGPT/Codex authentication modes remain separate; changing or disconnecting one never silently falls back to the other.
+
+When switching between API keys and Codex sign-in, **Dots without a custom model** use the current default saved in Settings. Existing Dots configured with a specific model retain it; choose a model available to the selected authentication mode (for example `codex:gpt-5.5` for Codex).
 
 ---
 

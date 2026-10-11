@@ -12,25 +12,39 @@
         <StackPanel Spacing="28" MaxWidth="720" HorizontalAlignment="Left">
             <StackPanel Spacing="6">
                 <TextBlock Text="Settings &amp; Security" FontSize="26" FontWeight="Bold" />
-                <TextBlock Text="Manage API keys, models, computer sandboxes and the Windows DPAPI credential vault."
+                <TextBlock Text="Manage AI sign-in, API keys, models, computer sandboxes and the Windows DPAPI credential vault."
                            FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
             <TextBlock x:Name="StatusMessageText" FontSize="13" Foreground="{ThemeResource AccentAAFillColorDefaultBrush}" />
 
-            <!-- API Keys Section -->
+            <!-- AI Authentication Section -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="AI Provider Keys" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="AI Provider Authentication" FontSize="18" FontWeight="SemiBold" />
                     <TextBlock Text="Keys are sealed with Windows DPAPI and tied to your Windows user account."
                                FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                    <ComboBox x:Name="OpenAiAuthModeInput" Header="OpenAI authentication method"
+                              SelectionChanged="OnAuthModeChanged" HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="API key (OpenAI Platform billing)" Tag="api_key" />
+                        <ComboBoxItem Content="ChatGPT / Codex (subscription access)" Tag="codex" />
+                    </ComboBox>
+                    <TextBlock Text="Codex uses your ChatGPT plan and requires Codex access. API keys remain separate; OpenDot never falls back to API billing automatically."
+                               TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="CodexStatusText" TextWrapping="Wrap" FontSize="13" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="CodexSignInButton" Content="Sign in with ChatGPT / Codex" Click="OnCodexSignInClicked" />
+                        <Button x:Name="CodexCancelButton" Content="Cancel sign-in" Click="OnCodexCancelClicked" IsEnabled="False" />
+                        <Button x:Name="CodexSignOutButton" Content="Disconnect" Click="OnCodexSignOutClicked" />
+                    </StackPanel>
 
                     <PasswordBox x:Name="OpenAiKeyInput" Header="OpenAI API Key" PlaceholderText="sk-..." />
                     <PasswordBox x:Name="OpenRouterKeyInput" Header="OpenRouter API Key (Open Weights)" PlaceholderText="sk-or-..." />
                     <PasswordBox x:Name="ComposioKeyInput" Header="Composio Project API Key (Triggers)" PlaceholderText="comp_..." />
 
-                    <Button Content="Save Keys" Style="{StaticResource AccentButtonStyle}" Click="OnSaveSettingsClicked" />
+                    <Button x:Name="SaveAuthenticationButton" Content="Save Authentication &amp; Keys" Style="{StaticResource AccentButtonStyle}" Click="OnSaveSettingsClicked" />
                 </StackPanel>
             </Border>
 
@@ -41,6 +55,8 @@
                     <TextBlock Text="Model &amp; Execution Environment" FontSize="18" FontWeight="SemiBold" />
 
                     <TextBox x:Name="DefaultModelInput" Header="Default AI Model" PlaceholderText="gpt-4o" />
+                    <TextBlock Text="Examples: gpt-4o (API key), codex:gpt-5.5 (ChatGPT / Codex), openrouter:provider/model. Existing Dots with no custom model use this default."
+                               TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     <TextBox x:Name="ComputerModeInput" Header="Computer Mode (local / docker / cloud)" PlaceholderText="local" />
 
                     <Button Content="Save Model Preferences" Click="OnSaveModelPrefsClicked" />

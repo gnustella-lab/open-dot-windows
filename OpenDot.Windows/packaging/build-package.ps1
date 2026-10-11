@@ -39,6 +39,15 @@ if ((Test-Path "$WinX64Dir\OpenDot.App.pri") -and -not (Test-Path "$WinX64Dir\re
     Write-Host "Ensured resources.pri mapping in publish output." -ForegroundColor Cyan
 }
 
+# Ensure Assets folder exists with application icons
+$assetsSource = Join-Path $SolutionDir "src\OpenDot.App\Assets"
+$assetsDest = Join-Path $WinX64Dir "Assets"
+if (Test-Path $assetsSource) {
+    if (-not (Test-Path $assetsDest)) { New-Item -ItemType Directory -Path $assetsDest -Force | Out-Null }
+    Copy-Item "$assetsSource\*" $assetsDest -Recurse -Force
+    Write-Host "Ensured Assets directory with application icons in publish output." -ForegroundColor Cyan
+}
+
 # 3. Create ZIP archive
 Write-Host "`n[2/3] Creating portable ZIP archive: $ZipOutput..." -ForegroundColor Yellow
 if (Test-Path $ZipOutput) {

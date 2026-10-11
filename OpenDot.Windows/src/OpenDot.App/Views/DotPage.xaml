@@ -214,6 +214,8 @@
                             <TextBox x:Name="SetupNameInput" Header="Name" />
                             <TextBox x:Name="SetupPurposeInput" Header="Purpose / Role" />
                             <TextBox x:Name="SetupInstructionsInput" Header="Instructions" AcceptsReturn="True" Height="100" />
+                            <TextBox x:Name="SetupModelInput" Header="Custom AI model (blank uses Settings default)"
+                                     PlaceholderText="codex:gpt-5.5 / gpt-4o / openrouter:provider/model" />
                             <ToggleSwitch x:Name="SetupLocalAccessSwitch" Header="Allow access to user's Windows computer" />
                             <Button Content="Save Identity" Style="{StaticResource AccentButtonStyle}" Click="OnSaveIdentityClicked" />
                         </StackPanel>

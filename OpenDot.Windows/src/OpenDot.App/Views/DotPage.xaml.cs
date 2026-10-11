@@ -81,6 +81,7 @@ public sealed partial class DotPage : Page
         SetupNameInput.Text = ViewModel.Dot.Name;
         SetupPurposeInput.Text = ViewModel.Dot.Purpose;
         SetupInstructionsInput.Text = ViewModel.Dot.Instructions;
+        SetupModelInput.Text = ViewModel.Dot.Model ?? string.Empty;
         SetupLocalAccessSwitch.IsOn = ViewModel.Dot.LocalAccess;
     }
 
@@ -178,6 +179,7 @@ public sealed partial class DotPage : Page
         ViewModel.Dot.Name = SetupNameInput.Text;
         ViewModel.Dot.Purpose = SetupPurposeInput.Text;
         ViewModel.Dot.Instructions = SetupInstructionsInput.Text;
+        ViewModel.Dot.Model = string.IsNullOrWhiteSpace(SetupModelInput.Text) ? null : SetupModelInput.Text.Trim();
         ViewModel.Dot.LocalAccess = SetupLocalAccessSwitch.IsOn;
         ViewModel.SaveDotSetup();
         UpdateHeader();

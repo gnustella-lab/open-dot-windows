@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -16,6 +17,22 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         Title = "Open Dot for Windows";
+        try
+        {
+            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+            if (!File.Exists(iconPath))
+            {
+                iconPath = Path.Combine(AppContext.BaseDirectory, "AppIcon.ico");
+            }
+            if (File.Exists(iconPath))
+            {
+                AppWindow.SetIcon(iconPath);
+            }
+        }
+        catch
+        {
+            // Silently continue if icon cannot be set
+        }
 
         _viewModel = AppServices.Services.GetRequiredService<MainViewModel>();
 

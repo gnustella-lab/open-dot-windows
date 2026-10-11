@@ -94,20 +94,16 @@ dotnet publish src/OpenDot.App/OpenDot.App.csproj `
 
 ---
 
-## 6. Initial Configuration & API Keys
+## 6. Initial AI Authentication
 
-When opening Open Dot for Windows for the first time:
+Open **Settings** in the sidebar and choose one OpenAI sign-in method:
 
-1. Navigate to the **Settings** view in the sidebar.
-2. Enter your API credentials:
-   - **OpenAI API Key:** (for GPT-4o, etc.).
-   - **OpenRouter API Key:** (for Claude, DeepSeek, Llama, Qwen, etc.).
-   - **Composio API Key:** (for app integrations such as Gmail, GitHub, Notion).
-3. Select your default provider and model.
-4. Click **Save API Keys**.
+- **API key:** Enter an OpenAI Platform key for API billing.
+- **ChatGPT / Codex:** Select **Sign in with ChatGPT / Codex**, finish the browser login, then use your eligible ChatGPT workspace subscription. OpenDot uses the Codex Responses backend and the default model `codex:gpt-5.5`; account/model access can vary.
 
-> [!IMPORTANT]
-> All credentials are encrypted with authenticated **AES-256-GCM** and sealed using the **Windows DPAPI** before being saved to disk. No plaintext keys are ever stored.
+These methods remain separate. OpenDot never silently switches from your Codex subscription to API billing or the reverse. Change the selected method explicitly in Settings. A Dot's optional custom model overrides the default; leave it blank for the current default. Use the `codex:` prefix for Codex models, no prefix for OpenAI API models, and `openrouter:` for OpenRouter.
+
+Codex sign-in credentials and API keys are sealed with authenticated AES-256-GCM and Windows DPAPI. The callback runs locally on `127.0.0.1:1455`; the browser sign-in uses OAuth PKCE and state validation. Disconnect clears this app's locally saved session without logging out of Codex CLI or other OpenAI apps. Closing Settings cancels an active sign-in. OpenRouter and Composio keys remain independently configurable.
 
 ---
 

@@ -341,6 +341,8 @@ public class AgentRuntime : IAgentRuntime
         pending.Index++;
         _repo.SetThread(convId, pending.ResponseId, JsonSerializer.Serialize(pending));
 
+        if (await ProcessToolCallsAsync(dot, convId, pending, ct)) return;
+
         await RunDriveLoopAsync(dot, convId, pending, ct);
     }
 
@@ -425,7 +427,6 @@ public class AgentRuntime : IAgentRuntime
     private async Task TurnAsync(Dot dot, string text, TriggerContext trigger, string conversationId, CancellationToken ct)
     {
         var conv = _repo.GetConversation(conversationId) ?? _repo.CreateConversation(dot.Id, "Chat");
-        var client = _clientResolver(dot);
 
         // Build conversation messages
         var messages = new List<AiChatMessage>();
@@ -451,7 +452,7 @@ public class AgentRuntime : IAgentRuntime
         {
             Trigger = trigger,
             Calls = [],
-            Outputs = [],
+            Outputs = messages,
             Index = 0
         };
 
@@ -467,19 +468,12 @@ public class AgentRuntime : IAgentRuntime
             ct.ThrowIfCancellationRequested();
 
             var sysPrompt = PromptBuilder.BuildSystemPrompt(dot, pending.Trigger, _repo, _computer, false, []);
-            var convMsgs = _repo.ConversationMessages(conversationId, 30)
-                .Where(m => (m.Role == "user" || m.Role == "dot") && !string.IsNullOrWhiteSpace(m.Text))
-                .Select(m => new AiChatMessage { Role = m.Role == "user" ? "user" : "assistant", Content = m.Text })
-                .ToList();
-
-            // Append pending tool outputs
-            convMsgs.AddRange(pending.Outputs);
 
             var req = new AiModelRequest
             {
-                Model = dot.Model ?? "gpt-4o",
+                Model = dot.Model ?? _repo.GetSetting("default_model") ?? "gpt-4o",
                 SystemPrompt = sysPrompt,
-                Messages = convMsgs,
+                Messages = pending.Outputs,
                 Tools = _tools,
                 PreviousResponseId = string.IsNullOrEmpty(pending.ResponseId) ? null : pending.ResponseId
             };
@@ -532,7 +526,12 @@ public class AgentRuntime : IAgentRuntime
             // Process tool calls
             pending.Calls = response.ToolCalls;
             pending.Index = 0;
-            pending.Outputs.Clear();
+            pending.Outputs.Add(new AiChatMessage
+            {
+                Role = "assistant",
+                Content = response.Content,
+                ToolCalls = response.ToolCalls
+            });
 
             var paused = await ProcessToolCallsAsync(dot, conversationId, pending, ct);
             if (paused)
@@ -710,7 +709,7 @@ public class AgentRuntime : IAgentRuntime
         var sysPrompt = PromptBuilder.BuildSystemPrompt(target, new TriggerContext("dot", From: from.Name), _repo, _computer, false, []);
         var req = new AiModelRequest
         {
-            Model = target.Model ?? "gpt-4o",
+            Model = target.Model ?? _repo.GetSetting("default_model") ?? "gpt-4o",
             SystemPrompt = sysPrompt,
             Messages = [new AiChatMessage { Role = "user", Content = $"{from.Name} asks: {message}" }]
         };

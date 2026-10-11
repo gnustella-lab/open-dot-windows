@@ -36,6 +36,8 @@ public static class AppServices
 
         // 3. AI Clients & Integrations
         services.AddSingleton(new HttpClient());
+        services.AddSingleton<CodexAuthService>();
+        services.AddSingleton<CodexAiClient>();
         services.AddSingleton(sp =>
         {
             var vault = sp.GetRequiredService<ISecureVault>();
@@ -88,11 +90,17 @@ public static class AppServices
             var vault = sp.GetRequiredService<ISecureVault>();
             var openai = sp.GetRequiredService<OpenAiClient>();
             var openrouter = sp.GetRequiredService<OpenRouterClient>();
+            var codex = sp.GetRequiredService<CodexAiClient>();
 
             return new AgentRuntime(repo, computer, vault, dot =>
             {
-                if (dot.Model != null && dot.Model.StartsWith("openrouter:"))
+                var model = dot.Model ?? repo.GetSetting("default_model") ?? "gpt-4o";
+                if (model.StartsWith("openrouter:", StringComparison.Ordinal))
                     return openrouter;
+                if (model.StartsWith("codex:", StringComparison.Ordinal) || model.StartsWith("chatgpt:", StringComparison.Ordinal))
+                    return codex;
+                if (repo.GetSetting("openai_auth_mode") == "codex")
+                    return codex;
                 return openai;
             });
         });

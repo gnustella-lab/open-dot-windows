@@ -85,6 +85,8 @@ The script produces:
 - **Installer:** `dist/installer/OpenDot-Windows-Setup-1.0.0.exe`
 - **Portable ZIP:** `dist/OpenDot-Windows-v1.0.0-x64.zip`
 
+The executable, main window, and installer use `src/OpenDot.App/Assets/AppIcon.ico`. The icon is embedded in the executable and installer, and copied to `Assets/AppIcon.ico` in the published application for the WinUI window. Keep the `Assets` directory alongside the executable when distributing the portable build.
+
 ---
 
 ## 📥 Downloads
