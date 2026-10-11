@@ -27,6 +27,7 @@ public sealed partial class MainWindow : Window
             if (File.Exists(iconPath))
             {
                 AppWindow.SetIcon(iconPath);
+                SetWin32Icon(iconPath);
             }
         }
         catch
@@ -106,5 +107,52 @@ public sealed partial class MainWindow : Window
                 ContentFrame.Navigate(typeof(DotPage), dialog.CreatedDot);
             }
         }
+    }
+
+    private void SetWin32Icon(string iconPath)
+    {
+        try
+        {
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (hWnd != IntPtr.Zero)
+            {
+                IntPtr hIconBig = LoadImage(IntPtr.Zero, iconPath, 1 /* IMAGE_ICON */, 32, 32, 0x0010 /* LR_LOADFROMFILE */);
+                IntPtr hIconSmall = LoadImage(IntPtr.Zero, iconPath, 1 /* IMAGE_ICON */, 16, 16, 0x0010 /* LR_LOADFROMFILE */);
+                if (hIconBig != IntPtr.Zero)
+                {
+                    SendMessage(hWnd, 0x0080 /* WM_SETICON */, (IntPtr)1 /* ICON_BIG */, hIconBig);
+                    SetClassLongPtr(hWnd, -14 /* GCLP_HICON */, hIconBig);
+                }
+                if (hIconSmall != IntPtr.Zero)
+                {
+                    SendMessage(hWnd, 0x0080 /* WM_SETICON */, (IntPtr)0 /* ICON_SMALL */, hIconSmall);
+                    SetClassLongPtr(hWnd, -34 /* GCLP_HICONSM */, hIconSmall);
+                }
+            }
+        }
+        catch
+        {
+            // Fallback gracefully
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetClassLongPtr")]
+    private static extern IntPtr SetClassLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetClassLong")]
+    private static extern IntPtr SetClassLong32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    private static IntPtr SetClassLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+    {
+        if (IntPtr.Size > 4)
+            return SetClassLongPtr64(hWnd, nIndex, dwNewLong);
+        else
+            return SetClassLong32(hWnd, nIndex, dwNewLong);
     }
 }

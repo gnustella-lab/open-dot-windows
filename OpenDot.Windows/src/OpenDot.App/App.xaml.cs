@@ -33,6 +33,7 @@ public partial class App : Application
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
             System.IO.File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] App OnLaunched started.\n");
 
+            try { SetCurrentProcessExplicitAppUserModelID("OpenDot.App"); } catch { }
             AppServices.Initialize();
             System.IO.File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] AppServices initialized.\n");
 
@@ -50,4 +51,7 @@ public partial class App : Application
             throw;
         }
     }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", SetLastError = true)]
+    private static extern void SetCurrentProcessExplicitAppUserModelID([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string AppID);
 }
