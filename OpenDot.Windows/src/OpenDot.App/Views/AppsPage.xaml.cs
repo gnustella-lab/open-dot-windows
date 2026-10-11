@@ -32,6 +32,12 @@ public sealed partial class AppsPage : Page
         };
     }
 
+    private async void OnRefreshClicked(object sender, RoutedEventArgs e)
+    {
+        await ViewModel.LoadAppsAsync();
+        AppsGridView.ItemsSource = ViewModel.Apps;
+    }
+
     private async void OnConnectAppClicked(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is TriggerApp app)

@@ -16,6 +16,9 @@ public partial class AppsViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isLoading;
+
     public AppsViewModel(ITriggerService triggerService)
     {
         _triggerService = triggerService;
@@ -25,9 +28,27 @@ public partial class AppsViewModel : ObservableObject
     [RelayCommand]
     public async Task LoadAppsAsync()
     {
-        var list = await _triggerService.GetTriggerAppsAsync();
-        Apps.Clear();
-        foreach (var a in list) Apps.Add(a);
+        try
+        {
+            IsLoading = true;
+            var list = await _triggerService.GetTriggerAppsAsync();
+            Apps.Clear();
+            foreach (var a in list) Apps.Add(a);
+
+            var connectedCount = list.Count(a => a.Connected);
+            if (connectedCount > 0)
+            {
+                StatusMessage = $"{connectedCount} app(s) connected in Composio.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading apps: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -42,7 +63,7 @@ public partial class AppsViewModel : ObservableObject
                 FileName = url,
                 UseShellExecute = true
             });
-            StatusMessage = $"Connecting {app.Name}...";
+            StatusMessage = $"Opening {app.Name} sign-in in your browser... After authorizing, click Refresh.";
         }
         else
         {

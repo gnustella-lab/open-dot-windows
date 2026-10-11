@@ -77,6 +77,15 @@ public static class AppServices
                 if (!string.IsNullOrWhiteSpace(env)) return env;
                 var sealedKey = repo.GetSetting("composio_api_key");
                 return string.IsNullOrWhiteSpace(sealedKey) ? null : vault.Unseal(sealedKey);
+            }, () =>
+            {
+                var id = repo.GetSetting("composio_trigger_user");
+                if (string.IsNullOrWhiteSpace(id))
+                {
+                    id = $"open-dot-{Guid.NewGuid():N}";
+                    repo.SetSetting("composio_trigger_user", id);
+                }
+                return id;
             });
         });
 
